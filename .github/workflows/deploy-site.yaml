@@ -1,0 +1,42 @@
+name: Deploy Website
+
+# run when pushed to master branch
+on:
+  push:
+    branches:
+    - source-code
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-18.04
+
+    steps:
+    # fix git config ref: https://github.com/actions/checkout/issues/14#issuecomment-523916396
+    - name: Fix Git Config
+      run: echo -e '[url "https://github.com/"]\n  insteadOf = "git@github.com:"' >> ~/.gitconfig
+    # checkout to master branch
+    - name: Checkout
+      uses: actions/checkout@master
+    
+    # setup node
+    - name: Setup Node
+      uses: actions/setup-node@v1
+      with:
+        node-version: '10.x'
+    
+    # build site
+    - name: Build
+      run: |
+        # compile theme
+        npm i
+        npm run build
+
+    # deploy website
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v2.4.0
+      env:
+        ACTIONS_DEPLOY_KEY: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+        PUBLISH_BRANCH: master
+        PUBLISH_DIR: ./dist
+      with:
+        emptyCommits: false
